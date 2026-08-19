@@ -26,5 +26,19 @@ where = ["src"]
 line-length = 100
 
 [tool.pytest.ini_options]
-filterwarnings = ["error"]
-
+filterwarnings = [
+    "error",
+    # pandas 2.3.x internally hits a NumPy 2.5 timedelta deprecation via
+    # pd.Timedelta(...). Not fixable in our code; pandas 3 resolves it but
+    # is blocked by mlflow's pandas<3 cap. Revisit when mlflow lifts the cap.
+    "ignore:The 'generic' unit for NumPy timedelta is deprecated:DeprecationWarning",
+    # mlflow.pyfunc import warns about mlflow's own agent type hints
+    # ("... is inferred as AnyType ..."), with ANSI codes prefixing the
+    # message (hence the leading .*). Cosmetic, third-party. Revisit on
+    # mlflow upgrades.
+    "ignore:.*is inferred as AnyType:UserWarning",
+    # mlflow's file utils still use codecs.open(), which Python 3.14
+    # deprecates. Stdlib-origin warning, not fixable here. Revisit on
+    # mlflow upgrades.
+    "ignore:codecs.open:DeprecationWarning",
+]
