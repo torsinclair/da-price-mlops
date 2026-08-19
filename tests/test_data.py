@@ -12,7 +12,7 @@ def test_honors_data_contract():
     assert s.index.tz is not None and str(s.index.tz) == "UTC"
     assert s.index.is_monotonic_increasing
     assert s.name == "price_eur_mwh"
-    assert (s.index[1] - s.index[0]) == pd.Timedelta(hours=1)
+    assert pd.infer_freq(s.index) == "h"
 
 
 def test_reproducible_by_seed():
