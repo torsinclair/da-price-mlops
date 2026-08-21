@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from dapm.data import synthetic_prices
-from dapm.drift import drift_report, feature_psi, psi, residual_degradation, target_ks
+from dapm.drift import drift_report, feature_psi, level_shift, psi, residual_degradation, target_ks
 from dapm.features import make_supervised
 
 RNG = np.random.default_rng(0)
@@ -76,3 +76,25 @@ def test_feature_psi_labels_the_drifted_column():
     assert result["drifted"] > 0.25
     assert result["stable"] < 0.05
     assert result.idxmax() == "drifted"
+
+
+def test_level_shift_controls():
+    a = _series(RNG.normal(0, 1, 3000))
+    same = _series(RNG.normal(0, 1, 3000))
+    moved = _series(RNG.normal(3.0, 1, 3000))
+    assert level_shift(a, same) < 0.2
+    assert level_shift(a, moved) > 2.0
+
+
+def test_slow_feature_declaration_flips_the_verdict():
+    """A modest level move on a slow feature: PSI screams, level check stays calm."""
+    n = 3000
+    ref = pd.DataFrame({"fast": RNG.normal(0, 1, n), "slow": RNG.normal(0, 1, n)})
+    live = pd.DataFrame({"fast": RNG.normal(0, 1, n), "slow": RNG.normal(0.7, 1, n)})
+    y_ref, y_live = _series(RNG.normal(0, 1, n)), _series(RNG.normal(0, 1, n))
+
+    as_fast = drift_report(ref, live, y_ref, y_live, 6.0, 6.0)
+    as_slow = drift_report(ref, live, y_ref, y_live, 6.0, 6.0, slow_features=("slow",))
+    assert as_fast["retrain"] is True
+    assert as_slow["retrain"] is False
+    assert as_slow["max_level_shift"] > 0.5

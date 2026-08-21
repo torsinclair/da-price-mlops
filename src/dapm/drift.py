@@ -20,7 +20,18 @@ KS_PVALUE_ALERT = 0.01
 RESIDUAL_DEGRADATION_ALERT = 0.25
 N_BINS = 10
 _EPS = 1e-6
+KS_STAT_ALERT = 0.15
+LEVEL_SHIFT_ALERT = 1.0
 
+
+def level_shift(reference: pd.Series, live: pd.Series) -> float:
+    """Shift of the live mean vs reference, in units of reference std.
+
+    The right check for slow-moving features (long rolling windows), whose
+    decorrelation time makes distributional tests like PSI meaningless on
+    practical monitoring windows.
+    """
+    return float(abs(live.mean() - reference.mean()) / reference.std())
 
 def psi(reference: pd.Series, live: pd.Series, n_bins: int = N_BINS) -> float:
     """Population Stability Index of live vs reference, on frozen bins.
@@ -61,25 +72,34 @@ def drift_report(
     live_y: pd.Series,
     live_mae: float,
     expected_mae: float,
+    slow_features: tuple[str, ...] = (),
 ) -> dict:
-    """All three detectors plus a single retrain verdict.
+    """All detectors plus a single retrain verdict.
 
-    Retrain triggers on any alert: a feature PSI above PSI_ALERT, a target
-    KS p-value below KS_PVALUE_ALERT, or live MAE degraded more than
-    RESIDUAL_DEGRADATION_ALERT relative to the champion's holdout MAE.
+    Fast features get PSI; slow features (caller-declared, known from the
+    feature engineering) get a level check. The KS alert requires both
+    significance and effect size: at production sample sizes p-values
+    alone flag practically irrelevant shifts.
     """
-    per_feature = feature_psi(reference_x, live_x)
+    fast = [c for c in reference_x.columns if c not in slow_features]
+    per_feature = feature_psi(reference_x[fast], live_x[fast])
+    shifts = pd.Series(
+        {c: level_shift(reference_x[c], live_x[c]) for c in slow_features}, dtype=float
+    )
     ks = target_ks(reference_y, live_y)
     degradation = residual_degradation(live_mae, expected_mae)
     return {
         "max_feature_psi": float(per_feature.max()),
         "worst_feature": str(per_feature.idxmax()),
         "n_features_warn": int((per_feature > PSI_WARN).sum()),
+        "max_level_shift": float(shifts.max()) if len(shifts) else 0.0,
+        "worst_slow_feature": str(shifts.idxmax()) if len(shifts) else "",
         **ks,
         "residual_degradation": degradation,
         "retrain": bool(
             per_feature.max() > PSI_ALERT
-            or ks["ks_pvalue"] < KS_PVALUE_ALERT
+            or (len(shifts) and shifts.max() > LEVEL_SHIFT_ALERT)
+            or (ks["ks_stat"] > KS_STAT_ALERT and ks["ks_pvalue"] < KS_PVALUE_ALERT)
             or degradation > RESIDUAL_DEGRADATION_ALERT
         ),
     }
