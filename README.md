@@ -90,6 +90,10 @@ For real data: register at transparency.entsoe.eu, put the token in
   firing.
 - **Functions over classes.** A class must earn its existence; none has
   yet.
+- **Ephemeral backend per scheduled run.** The Actions loop runs
+  hermetically against a fresh sqlite backend; pointing the same job at
+  a persistent tracking server is a one-env-var change
+  (`MLFLOW_TRACKING_URI`), which is the intended production shape.
 
 ## Known simplifications
 

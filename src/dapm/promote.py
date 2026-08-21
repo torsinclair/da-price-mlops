@@ -58,7 +58,7 @@ def latest_model_id(experiment: str, run_id: str) -> str:
     return ids[0]
 
 
-def _champion_version(client: MlflowClient) -> int | None:
+def champion_version(client: MlflowClient) -> int | None:
     try:
         return int(client.get_model_version_by_alias(MODEL_NAME, "champion").version)
     except MlflowException:
@@ -91,7 +91,7 @@ def promote_latest(
     challenger = mlflow.sklearn.load_model(f"models:/{MODEL_NAME}@challenger")
     challenger_mae = float(mean_absolute_error(y_test, challenger.predict(x_test)))
 
-    incumbent = _champion_version(client)
+    incumbent = champion_version(client)
     if incumbent is None:
         champion_mae = None
         promoted = True  # cold start: an evaluated model beats no model

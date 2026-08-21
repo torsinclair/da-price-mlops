@@ -1,0 +1,21 @@
+name: retrain
+
+on:
+  schedule:
+    - cron: "23 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e .
+      # Hermetic by design: each run exercises the full cycle against a
+      # fresh sqlite backend. A persistent deployment is the same job with
+      # MLFLOW_TRACKING_URI pointed at a real tracking server.
+      - run: python -m dapm.loop
