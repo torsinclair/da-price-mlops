@@ -30,6 +30,11 @@ onto standard MLOps tooling.
    drift verdict, retrains and submits the result to the same promotion
    gate. A false alarm therefore costs one refused challenger, not a
    deployment.
+5. **Decision quality** (`dapm.decision`): the champion's forecasts
+   drive a daily charging schedule (k cheapest hours), evaluated at
+   realized prices against perfect foresight and naive
+   charge-on-arrival. The product metric is savings capture: the
+   fraction of the naive-to-perfect gap the forecast collects.
 
 ## Quickstart
 
@@ -94,7 +99,14 @@ For real data: register at transparency.entsoe.eu, put the token in
   hermetically against a fresh sqlite backend; pointing the same job at
   a persistent tracking server is a one-env-var change
   (`MLFLOW_TRACKING_URI`), which is the intended production shape.
-
+- **Model metrics and product metrics are different experiments.** MAE
+  lives in training/scoring; savings capture and cost regret live in
+  the decision experiment. A uniformly biased forecast has terrible MAE
+  and schedules perfectly — the unit test proving it is the reason this
+  layer exists. On synthetic data the champion captures ~90% of
+  achievable savings at 22% MAE skill: decision value concentrates in
+  the within-day ranking, not the level.
+  
 ## Known simplifications
 
 - The parquet cache key does not include a code version; a change to
