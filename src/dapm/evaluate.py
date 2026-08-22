@@ -18,10 +18,10 @@ import pandas as pd
 from mlflow import MlflowClient
 from sklearn.metrics import mean_absolute_error
 
+from dapm.config import model_name
 from dapm.data import load_prices
 from dapm.drift import drift_report
 from dapm.features import make_supervised
-from dapm.promote import MODEL_NAME
 
 SCORING_EXPERIMENT = "da-price-scoring"
 LIVE_DAYS = 28
@@ -40,9 +40,9 @@ def score_champion(
 ) -> dict:
     """Score @champion on the trailing window; log the drift report to MLflow."""
     client = MlflowClient()
-    mv = client.get_model_version_by_alias(MODEL_NAME, "champion")
+    mv = client.get_model_version_by_alias(model_name(), "champion")
     expected_mae = float(mv.tags["gate_challenger_mae"])
-    model = mlflow.sklearn.load_model(f"models:/{MODEL_NAME}@champion")
+    model = mlflow.sklearn.load_model(f"models:/{model_name()}@champion")
 
     x, y = make_supervised(prices)
     live_end = x.index.max()

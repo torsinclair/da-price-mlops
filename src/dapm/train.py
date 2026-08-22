@@ -129,7 +129,7 @@ def run_walk_forward(
             importance_figure(model, x.loc[test_idx], y.loc[test_idx]),
             "permutation_importance.png",
         )
-        mlflow.sklearn.log_model(model, name="model")
+        mlflow.sklearn.log_model(model, name="model", input_example=x.loc[test_idx].iloc[:5])
     return summary
 
 

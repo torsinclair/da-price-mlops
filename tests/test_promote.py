@@ -3,8 +3,9 @@
 import mlflow
 from mlflow import MlflowClient
 
+from dapm.config import model_name
 from dapm.data import synthetic_prices
-from dapm.promote import MODEL_NAME, promote_latest, should_promote
+from dapm.promote import promote_latest, should_promote
 from dapm.train import run_walk_forward
 
 SPLIT = {"n_folds": 2, "test_hours": 24 * 7, "min_train_hours": 24 * 60}
@@ -35,5 +36,5 @@ def test_cold_start_then_worse_challenger_rejected(tmp_path):
     assert second["challenger_mae"] > second["champion_mae"]
 
     client = MlflowClient()
-    assert int(client.get_model_version_by_alias(MODEL_NAME, "champion").version) == 1
-    assert int(client.get_model_version_by_alias(MODEL_NAME, "challenger").version) == 2
+    assert int(client.get_model_version_by_alias(model_name(), "champion").version) == 1
+    assert int(client.get_model_version_by_alias(model_name(), "challenger").version) == 2

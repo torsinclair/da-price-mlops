@@ -16,11 +16,11 @@ from mlflow import MlflowClient
 from mlflow.exceptions import MlflowException
 from sklearn.metrics import mean_absolute_error
 
+from dapm.config import model_name
 from dapm.data import load_prices
 from dapm.features import make_supervised
 from dapm.train import walk_forward_splits
 
-MODEL_NAME = "da-price-forecaster"
 MIN_RELATIVE_IMPROVEMENT = 0.02
 
 
@@ -60,7 +60,7 @@ def latest_model_id(experiment: str, run_id: str) -> str:
 
 def champion_version(client: MlflowClient) -> int | None:
     try:
-        return int(client.get_model_version_by_alias(MODEL_NAME, "champion").version)
+        return int(client.get_model_version_by_alias(model_name(), "champion").version)
     except MlflowException:
         return None
 
@@ -85,10 +85,10 @@ def promote_latest(
 
     run_id = latest_run_id(experiment)
     model_id = latest_model_id(experiment, run_id)
-    version = int(mlflow.register_model(f"models:/{model_id}", MODEL_NAME).version)
-    client.set_registered_model_alias(MODEL_NAME, "challenger", version)
+    version = int(mlflow.register_model(f"models:/{model_id}", model_name()).version)
+    client.set_registered_model_alias(model_name(), "challenger", version)
 
-    challenger = mlflow.sklearn.load_model(f"models:/{MODEL_NAME}@challenger")
+    challenger = mlflow.sklearn.load_model(f"models:/{model_name()}@challenger")
     challenger_mae = float(mean_absolute_error(y_test, challenger.predict(x_test)))
 
     incumbent = champion_version(client)
@@ -96,19 +96,19 @@ def promote_latest(
         champion_mae = None
         promoted = True  # cold start: an evaluated model beats no model
     else:
-        champion = mlflow.sklearn.load_model(f"models:/{MODEL_NAME}@champion")
+        champion = mlflow.sklearn.load_model(f"models:/{model_name()}@champion")
         champion_mae = float(mean_absolute_error(y_test, champion.predict(x_test)))
         promoted = should_promote(champion_mae, challenger_mae)
 
     if promoted:
-        client.set_registered_model_alias(MODEL_NAME, "champion", version)
+        client.set_registered_model_alias(model_name(), "champion", version)
 
     tags = {"gate_challenger_mae": f"{challenger_mae:.4f}", "gate_promoted": str(promoted)}
     if incumbent is not None:
         tags["gate_champion_version"] = str(incumbent)
         tags["gate_champion_mae"] = f"{champion_mae:.4f}"
     for key, value in tags.items():
-        client.set_model_version_tag(MODEL_NAME, str(version), key, value)
+        client.set_model_version_tag(model_name(), str(version), key, value)
 
     return {
         "challenger_version": version,

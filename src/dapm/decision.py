@@ -18,9 +18,9 @@ import mlflow
 import pandas as pd
 from sklearn.metrics import mean_absolute_error
 
+from dapm.config import model_name
 from dapm.data import load_prices
 from dapm.features import make_supervised
-from dapm.promote import MODEL_NAME
 
 matplotlib.use("Agg")
 
@@ -124,7 +124,7 @@ def main(argv: list[str] | None = None) -> None:
 
     prices = load_prices(args.start, args.end, source=args.source, api_key=api_key)
     x, y = make_supervised(prices)
-    model = mlflow.sklearn.load_model(f"models:/{MODEL_NAME}@champion")
+    model = mlflow.sklearn.load_model(f"models:/{model_name()}@champion")
 
     window = x.index >= x.index.max() - pd.Timedelta(days=args.days)
     forecast = pd.Series(model.predict(x[window]), index=x.index[window])
