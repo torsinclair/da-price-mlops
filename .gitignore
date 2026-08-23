@@ -5,4 +5,5 @@ mlruns/
 mlartifacts/
 data/cache/
 .env
+.env.databricks
 mlflow.db

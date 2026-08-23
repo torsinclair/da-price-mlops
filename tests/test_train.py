@@ -43,3 +43,14 @@ def test_walk_forward_smoke_logs_to_mlflow(tmp_path):
     assert summary["mae"].notna().all()
     runs = mlflow.search_runs(experiment_names=["smoke"])
     assert len(runs) == 3  # one parent + two fold children
+
+
+def test_experiment_prefix_is_applied(tmp_path, monkeypatch):
+    monkeypatch.setenv("DAPM_EXPERIMENT_PREFIX", "pfx")
+    mlflow.set_tracking_uri(f"sqlite:///{tmp_path}/mlflow.db")
+    prices = synthetic_prices("2024-01-01", "2024-07-01", seed=0)
+    run_walk_forward(
+        prices, model_params={"max_iter": 5}, n_folds=2,
+        test_hours=24 * 7, min_train_hours=24 * 60, experiment="smoke",
+    )
+    assert len(mlflow.search_runs(experiment_names=["pfx/smoke"])) == 3

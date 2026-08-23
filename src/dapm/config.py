@@ -17,4 +17,19 @@ def model_name() -> str:
 
 
 def experiment_name(default: str) -> str:
-    return os.environ.get("DAPM_EXPERIMENT_PREFIX", "") + default
+    prefix = os.environ.get("DAPM_EXPERIMENT_PREFIX", "")
+    if prefix and not prefix.endswith("/"):
+        prefix += "/"
+    return prefix + default
+
+
+def announce() -> None:
+    """Print the resolved deployment target; silent fallback is how runs land
+    on the wrong backend unnoticed."""
+    import mlflow
+
+    print(
+        f"[dapm] tracking={mlflow.get_tracking_uri()} "
+        f"registry={mlflow.get_registry_uri()} model={model_name()!r} "
+        f"prefix={os.environ.get('DAPM_EXPERIMENT_PREFIX', '')!r}"
+    )

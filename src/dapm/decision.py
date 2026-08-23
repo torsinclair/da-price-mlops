@@ -18,7 +18,7 @@ import mlflow
 import pandas as pd
 from sklearn.metrics import mean_absolute_error
 
-from dapm.config import model_name
+from dapm.config import announce, experiment_name, model_name
 from dapm.data import load_prices
 from dapm.features import make_supervised
 
@@ -108,6 +108,7 @@ def cumulative_cost_figure(costs: pd.DataFrame):
 
 def main(argv: list[str] | None = None) -> None:
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
+    announce()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", choices=["synthetic", "entsoe"], default="synthetic")
     parser.add_argument("--start", default="2023-01-01")
@@ -134,7 +135,7 @@ def main(argv: list[str] | None = None) -> None:
     report = decision_report(costs)
     report["forecast_mae"] = float(mean_absolute_error(actual, forecast))
 
-    mlflow.set_experiment(DECISION_EXPERIMENT)
+    mlflow.set_experiment(experiment_name(DECISION_EXPERIMENT))
     with mlflow.start_run(run_name="decision"):
         mlflow.log_params(
             {"hours_per_day": HOURS_PER_DAY, "naive_start_hour": NAIVE_START_HOUR,

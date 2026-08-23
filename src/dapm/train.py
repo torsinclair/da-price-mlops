@@ -15,6 +15,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 
+from dapm.config import announce, experiment_name
 from dapm.data import load_prices
 from dapm.features import make_supervised
 
@@ -100,7 +101,7 @@ def run_walk_forward(
     x, y = make_supervised(prices)
     splits = walk_forward_splits(x.index, n_folds, test_hours, min_train_hours)
 
-    mlflow.set_experiment(experiment)
+    mlflow.set_experiment(experiment_name(experiment))
     rows = []
     with mlflow.start_run(run_name="walk_forward"):
         mlflow.log_params(model_params)
@@ -129,12 +130,15 @@ def run_walk_forward(
             importance_figure(model, x.loc[test_idx], y.loc[test_idx]),
             "permutation_importance.png",
         )
-        mlflow.sklearn.log_model(model, name="model", input_example=x.loc[test_idx].iloc[:5])
+        mlflow.sklearn.log_model(
+            model, name="model", input_example=x.loc[test_idx].iloc[:5].astype("float64")
+        )
     return summary
 
 
 def main(argv: list[str] | None = None) -> None:
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
+    announce()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", choices=["synthetic", "entsoe"], default="synthetic")
     parser.add_argument("--start", default="2023-01-01")

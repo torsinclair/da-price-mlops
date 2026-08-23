@@ -13,6 +13,7 @@ import os
 import mlflow
 from mlflow import MlflowClient
 
+from dapm.config import announce
 from dapm.data import load_prices
 from dapm.evaluate import score_champion
 from dapm.promote import champion_version, promote_latest
@@ -53,6 +54,7 @@ def run_cycle(
 
 def main(argv: list[str] | None = None) -> None:
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
+    announce()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", choices=["synthetic", "entsoe"], default="synthetic")
     parser.add_argument("--start", default="2023-01-01")

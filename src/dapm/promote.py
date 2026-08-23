@@ -16,7 +16,7 @@ from mlflow import MlflowClient
 from mlflow.exceptions import MlflowException
 from sklearn.metrics import mean_absolute_error
 
-from dapm.config import model_name
+from dapm.config import announce, experiment_name, model_name
 from dapm.data import load_prices
 from dapm.features import make_supervised
 from dapm.train import walk_forward_splits
@@ -36,7 +36,7 @@ def should_promote(
 def latest_run_id(experiment: str) -> str:
     """Id of the most recent walk_forward parent run in the experiment."""
     runs = mlflow.search_runs(
-        experiment_names=[experiment],
+        experiment_names=[experiment_name(experiment)],
         filter_string="attributes.run_name = 'walk_forward'",
         order_by=["attributes.start_time DESC"],
         max_results=1,
@@ -48,7 +48,7 @@ def latest_run_id(experiment: str) -> str:
 
 def latest_model_id(experiment: str, run_id: str) -> str:
     """Model id of the LoggedModel produced by the given run."""
-    exp = mlflow.get_experiment_by_name(experiment)
+    exp = mlflow.get_experiment_by_name(experiment_name(experiment))
     models = mlflow.search_logged_models(
         experiment_ids=[exp.experiment_id], output_format="list"
     )
@@ -121,6 +121,7 @@ def promote_latest(
 
 def main(argv: list[str] | None = None) -> None:
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
+    announce()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", choices=["synthetic", "entsoe"], default="synthetic")
     parser.add_argument("--start", default="2023-01-01")

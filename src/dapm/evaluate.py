@@ -18,7 +18,7 @@ import pandas as pd
 from mlflow import MlflowClient
 from sklearn.metrics import mean_absolute_error
 
-from dapm.config import model_name
+from dapm.config import announce, experiment_name, model_name
 from dapm.data import load_prices
 from dapm.drift import drift_report
 from dapm.features import make_supervised
@@ -59,7 +59,7 @@ def score_champion(
         x[ref], x[live], y[ref], y[live], live_mae, expected_mae, slow_features=SLOW_FEATURES
     )
 
-    mlflow.set_experiment(experiment)
+    mlflow.set_experiment(experiment_name(experiment))
     with mlflow.start_run(run_name="score"):
         mlflow.log_params(
             {
@@ -85,6 +85,7 @@ def score_champion(
 
 def main(argv: list[str] | None = None) -> None:
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
+    announce()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", choices=["synthetic", "entsoe"], default="synthetic")
     parser.add_argument("--start", default="2023-01-01")
