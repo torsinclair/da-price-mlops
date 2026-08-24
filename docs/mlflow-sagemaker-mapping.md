@@ -20,7 +20,12 @@ portability story covers the third major backend honestly.
 - Consequence: "MLflow vs SageMaker" is a false choice in 2026. AWS
   itself ships MLflow as the experimentation/registry API, with
   SageMaker as the substrate beneath it. The skills transfer directly.
-
+- Rollout note (verified hands-on, Aug 2026): a fresh eu-north-1
+  account's Studio surface still offers only the instance-billed
+  MLflow Tracking Server flow (MLflow 3.0, sized instances, own S3
+  bucket); the no-cost serverless MLflow App tier had not yet reached
+  it. Worth re-checking before committing to either form.
+  
 ## The mapping
 
 | This repo (MLflow) | SageMaker AI equivalent | Trading practice |

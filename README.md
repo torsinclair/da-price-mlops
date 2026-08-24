@@ -106,7 +106,18 @@ For real data: register at transparency.entsoe.eu, put the token in
   layer exists. On synthetic data the champion captures ~90% of
   achievable savings at 22% MAE skill: decision value concentrates in
   the within-day ranking, not the level.
-  
+- **Portable across backends, honestly accounted.** The same entry
+  points run against local sqlite and Databricks (hosted MLflow +
+  Unity Catalog registry). The marketing version is "change the
+  tracking URI"; the lived version is five environment variables
+  (tracking URI, registry URI, auth profile, experiment path prefix,
+  three-level UC model name — see the `.env.databricks` pattern),
+  plus two requirements UC enforces in code: registered models must
+  carry a signature, and model names are SQL identifiers. Because
+  env-driven config fails silent, every entry point announces its
+  resolved target before running. A mapping of the same loop onto
+  AWS SageMaker AI is in `docs/mlflow-sagemaker-mapping.md`.
+    
 ## Known simplifications
 
 - The parquet cache key does not include a code version; a change to
