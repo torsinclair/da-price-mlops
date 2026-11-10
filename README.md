@@ -40,7 +40,7 @@ onto standard MLOps tooling.
 
     python3 -m venv .venv && source .venv/bin/activate
     pip install -e ".[dev]"
-    pytest -q                      # 31 tests, hermetic (tmp sqlite per test)
+    pytest -q                      # 39 tests, hermetic (tmp sqlite per test)
     python -m dapm.train           # synthetic data by default
     python -m dapm.promote
     python -m dapm.evaluate
