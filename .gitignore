@@ -7,3 +7,11 @@ data/cache/
 .env
 .env.databricks
 mlflow.db
+
+# terraform
+infra/.terraform/
+infra/terraform.tfvars
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log

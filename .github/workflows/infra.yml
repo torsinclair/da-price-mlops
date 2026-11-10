@@ -1,0 +1,39 @@
+name: infra
+
+on:
+  push:
+    branches: [main]
+    paths: ["infra/**", ".github/workflows/infra.yml"]
+  pull_request:
+    paths: ["infra/**", ".github/workflows/infra.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.3"
+          terraform_wrapper: false
+
+      - name: fmt
+        run: terraform fmt -check -recursive -diff
+
+      # No credentials and no state: -backend=false installs the providers
+      # and nothing else. validate then checks every resource against the
+      # real provider schema, which is the part that catches a renamed
+      # attribute after a major provider release.
+      - name: init
+        run: terraform init -backend=false -input=false
+
+      - name: validate
+        run: terraform validate -no-color
