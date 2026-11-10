@@ -40,7 +40,7 @@ onto standard MLOps tooling.
 
     python3 -m venv .venv && source .venv/bin/activate
     pip install -e ".[dev]"
-    pytest -q                      # 31 tests, hermetic (tmp sqlite per test)
+    pytest -q                      # 39 tests, hermetic (tmp sqlite per test)
     python -m dapm.train           # synthetic data by default
     python -m dapm.promote
     python -m dapm.evaluate
@@ -99,6 +99,17 @@ For real data: register at transparency.entsoe.eu, put the token in
   hermetically against a fresh sqlite backend; pointing the same job at
   a persistent tracking server is a one-env-var change
   (`MLFLOW_TRACKING_URI`), which is the intended production shape.
+- **That production shape is declared, not just described.** `infra/` is
+  the preceding sentence as Terraform: Postgres Flexible Server as the
+  backend store, a private blob container as the artifact store, Key Vault
+  for the DSN and the ENTSO-E token, a user-assigned identity because the
+  storage account's shared keys are disabled, and the tracking server on
+  Container Apps. The outputs are the same environment variables the
+  application already reads, so the infrastructure and the config speak one
+  vocabulary. CI runs `fmt -check`, `init -backend=false` and `validate` on
+  every change under `infra/`. It has never been applied against a live
+  subscription, and `infra/README.md` leads with that rather than letting
+  the directory imply otherwise.
 - **Model metrics and product metrics are different experiments.** MAE
   lives in training/scoring; savings capture and cost regret live in
   the decision experiment. A uniformly biased forecast has terrible MAE

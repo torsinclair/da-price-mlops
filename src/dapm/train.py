@@ -130,8 +130,17 @@ def run_walk_forward(
             importance_figure(model, x.loc[test_idx], y.loc[test_idx]),
             "permutation_importance.png",
         )
+        # skops loads only types it has been told to trust. Since skops 0.15
+        # that list no longer includes the tree predictor inside
+        # HistGradientBoosting. This model is our own artifact, so we name
+        # the one type it needs rather than trusting everything.
         mlflow.sklearn.log_model(
-            model, name="model", input_example=x.loc[test_idx].iloc[:5].astype("float64")
+            model,
+            name="model",
+            input_example=x.loc[test_idx].iloc[:5].astype("float64"),
+            skops_trusted_types=[
+                "sklearn.ensemble._hist_gradient_boosting.predictor.TreePredictor"
+            ],
         )
     return summary
 
