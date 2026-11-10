@@ -42,4 +42,8 @@ filterwarnings = [
     # deprecates. Stdlib-origin warning, not fixable here. Revisit on
     # mlflow upgrades.
     "ignore:codecs.open:DeprecationWarning",
+    # SQLAlchemy 2.1 deprecates the noload loader strategy, which mlflow's
+    # SQL tracking store still uses. Third-party, not fixable here. Revisit
+    # on mlflow upgrades.
+    "ignore:The ``noload`` loader strategy is deprecated:DeprecationWarning",
 ]
