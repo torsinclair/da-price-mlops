@@ -54,7 +54,7 @@ For real data: register at transparency.entsoe.eu, put the token in
 - **Walk-forward, never k-fold.** Splits are expanding-window and
   strictly causal. A unit test rewrites all prices within 24h of a
   timestamp and asserts the features do not move — leakage detection as
-  a test, not a hope.
+  a test.
 - **A 24-hour feature embargo, enforced.** Day-ahead bids for day D are
   placed during D−1, so no feature may use prices newer than t−24h. The
   embargo raises `ValueError` rather than relying on convention.
